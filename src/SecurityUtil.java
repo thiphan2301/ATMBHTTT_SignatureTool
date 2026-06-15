@@ -31,7 +31,9 @@ public class SecurityUtil {
 	
 	// phương thức băm đơn hàng 
 	public static String hashOrderData(String orderData) throws NoSuchAlgorithmException {
-		return null;
+	    MessageDigest digest = MessageDigest.getInstance("SHA-256");
+	    byte[] hashBytes = digest.digest(orderData.getBytes(StandardCharsets.UTF_8));
+	    return Base64.getEncoder().encodeToString(hashBytes); 
 	}
 
 	//phương thức cho chức năng ký điên tử (mã hóa băm bằng private key)
