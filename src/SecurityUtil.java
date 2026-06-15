@@ -1,10 +1,11 @@
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.security.*;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
 public class SecurityUtil {
@@ -29,12 +30,38 @@ public class SecurityUtil {
     }
 	
 	// phương thức băm đơn hàng 
-	public static String hashOrderData(String orderData) {
+	public static String hashOrderData(String orderData) throws NoSuchAlgorithmException {
 		return null;
 	}
-	
+
 	//phương thức cho chức năng ký điên tử (mã hóa băm bằng private key)
-	public static String signHash(String hashValue, File privateKeyFile) {
-		return null;
+	public static String signHash(String hashValue, File privateKeyFile) throws NoSuchAlgorithmException, NoSuchProviderException, IOException, InvalidKeySpecException, InvalidKeyException, SignatureException {
+		PrivateKey privateKey = createPrivKey(privateKeyFile);
+		Signature signRsa = Signature.getInstance("NONEwithRSA");
+		signRsa.initSign(privateKey);
+		signRsa.update(hashValue.getBytes(StandardCharsets.UTF_8));
+		byte[] signByte = signRsa.sign();
+		return Base64.getEncoder().encodeToString(signByte);
+	}
+
+	public static PrivateKey createPrivKey (File privateKeyFile) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
+		FileInputStream fis = new FileInputStream(privateKeyFile);
+		ByteArrayOutputStream bos = new ByteArrayOutputStream();
+		byte[] bf = new byte[102400];
+		int data;
+		while((data = fis.read(bf)) != -1) {
+			bos.write(bf, 0, data);
+		}
+		bos.close();
+		fis.close();
+
+		String privKeyString = bos.toString(StandardCharsets.UTF_8)
+				.replaceAll("\\n", "")
+				.replaceAll("\\r", "");
+		byte[] keyByte = Base64.getDecoder().decode(privKeyString);
+		X509EncodedKeySpec spec = new X509EncodedKeySpec(keyByte);
+		KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+
+        return keyFactory.generatePrivate(spec);
 	}
 }

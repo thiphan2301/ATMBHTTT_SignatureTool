@@ -12,6 +12,7 @@ public class SignatureToolUI extends JFrame {
         setTitle("Tool Chữ Ký Điện Tử Đơn Hàng");
         setSize(650, 550);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setVisible(true);
         setLocationRelativeTo(null);
         
         // Thêm padding cho toàn bộ Tab
@@ -102,7 +103,7 @@ public class SignatureToolUI extends JFrame {
         btnHash.addActionListener(e -> {
             try {
                 String input = txtInput.getText().trim();
-                if (input.isEmpty()) {
+                if (input.isEmpty() || input == null) {
                     JOptionPane.showMessageDialog(this, "Vui lòng nhập chuỗi đơn hàng!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
                     return;
                 }
