@@ -21,7 +21,6 @@ public class SignatureToolUI extends JFrame {
         // Dùng JTabbedPane chia các chức năng thành các Tab 
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.addTab("Tạo Cặp Khóa", createKeyGenPanel());
-        tabbedPane.addTab("Băm Đơn Hàng", createHashPanel());
         tabbedPane.addTab("Ký Điện Tử", createSignPanel());
 
         add(tabbedPane);
@@ -62,64 +61,6 @@ public class SignatureToolUI extends JFrame {
         return panel;
     }
 
-    // View view cho chức năng băm (hash)
-    private JPanel createHashPanel() {
-        JPanel panel = new JPanel(new BorderLayout(10, 15));
-        panel.setBorder(new EmptyBorder(10, 10, 10, 10));
-
-        // Label và ô input
-        JPanel topPanel = new JPanel(new BorderLayout(5, 5));
-        topPanel.add(new JLabel("Nhập chuỗi thông tin đơn hàng cần băm:"), BorderLayout.NORTH);
-        
-        JTextArea txtInput = new JTextArea();
-        txtInput.setLineWrap(true);
-        txtInput.setWrapStyleWord(true);
-        topPanel.add(new JScrollPane(txtInput), BorderLayout.CENTER);
-        panel.add(topPanel, BorderLayout.CENTER); 
-
-        // Nút băm và kết quả
-        JPanel bottomPanel = new JPanel(new BorderLayout(10, 10));
-        
-        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        JButton btnHash = new JButton("Băm Dữ Liệu ");
-        btnHash.setPreferredSize(new Dimension(200, 35));
-        btnPanel.add(btnHash);
-        bottomPanel.add(btnPanel, BorderLayout.NORTH);
-
-        // Panel hiển thị kết quả
-        JPanel resultPanel = new JPanel(new BorderLayout(5, 5));
-        resultPanel.add(new JLabel("Mã băm kết quả:"), BorderLayout.WEST);
-        JTextField txtResult = new JTextField();
-        txtResult.setEditable(false);
-        JButton btnCopy = new JButton("Copy Mã Băm");
-        
-        resultPanel.add(txtResult, BorderLayout.CENTER);
-        resultPanel.add(btnCopy, BorderLayout.EAST);
-        
-        bottomPanel.add(resultPanel, BorderLayout.SOUTH);
-        panel.add(bottomPanel, BorderLayout.SOUTH);
-
-        // Sự kiện Băm
-        btnHash.addActionListener(e -> {
-            try {
-                String input = txtInput.getText().trim();
-                if (input.isEmpty() || input == null) {
-                    JOptionPane.showMessageDialog(this, "Vui lòng nhập chuỗi đơn hàng!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
-                    return;
-                }
-                String hash = SecurityUtil.hashOrderData(input);
-                txtResult.setText(hash);
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage());
-            }
-        });
-
-        // Sự kiện Copy
-        btnCopy.addActionListener(e -> copyToClipboard(txtResult.getText()));
-
-        return panel;
-    }
-
     // view cho chức năng ký (sign)
     private JPanel createSignPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
@@ -129,15 +70,15 @@ public class SignatureToolUI extends JFrame {
         gbc.insets = new Insets(8, 5, 8, 5); // Khoảng cách giữa các phần tử
         gbc.weightx = 1.0;
 
-        // Label Mã băm
+        // Chuỗi thông tin đh
         gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
-        panel.add(new JLabel("Dán Mã Băm (Hash) vào đây:"), gbc);
-
-        // Ô nhập Mã băm
+        panel.add(new JLabel("Nhập Chuỗi Thông Tin Đơn Hàng:"), gbc);
         gbc.gridy = 1;
-        JTextField txtHashInput = new JTextField();
-        panel.add(txtHashInput, gbc);
-
+        JTextArea txtOrderInput = new JTextArea(3, 20);
+        txtOrderInput.setLineWrap(true);
+        txtOrderInput.setWrapStyleWord(true);
+        panel.add(new JScrollPane(txtOrderInput), gbc);
+        
         // Chọn file Private Key
         gbc.gridy = 2; gbc.gridwidth = 1; gbc.weightx = 0.2;
         JButton btnChooseKey = new JButton("Chọn file Private Key");
@@ -191,12 +132,13 @@ public class SignatureToolUI extends JFrame {
         // Sự kiện Ký
         btnSign.addActionListener(e -> {
             try {
-                String hashValue = txtHashInput.getText().trim();
-                if (hashValue.isEmpty() || privateKeyFile[0] == null) {
-                    JOptionPane.showMessageDialog(this, "Vui lòng nhập mã băm và chọn file Private Key!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+                String orderData = txtOrderInput.getText().trim();
+                if (orderData.isEmpty() || privateKeyFile[0] == null) {
+                    JOptionPane.showMessageDialog(this, "Vui lòng nhập thông tin đơn hàng và chọn file Private Key!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
                     return;
                 }
-                String signature = SecurityUtil.signHash(hashValue, privateKeyFile[0]);
+                // Gọi hàm đã được update
+                String signature = SecurityUtil.signData(orderData, privateKeyFile[0]);
                 txtSignature.setText(signature);
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, "Khóa không hợp lệ hoặc lỗi xử lý!\n" + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
